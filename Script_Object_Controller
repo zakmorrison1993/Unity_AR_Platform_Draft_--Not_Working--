@@ -1,0 +1,252 @@
+Language: C# - '//' = comments
+// This code is old and outdated but was made in 2016 in Unity as a passion project (I may work on it again later)
+// This code positions the enemy sprites in relation to the mobile devices camera.
+// problems include anmation timing and positioning on mobile device. (more unknown to developer)
+
+// no comments added at this time!
+
+//libraries
+using UnityEngine;
+using System.Collections;
+
+public class EnemyBehavior : MonoBehaviour {
+
+	//Movement and Direction
+	GameObject player;
+	Vector3 startp;
+	Vector3 lookAtPosition;
+
+	//Animator 
+	Animator anim;
+	Animation anim2;
+
+	float ratio = 0;
+	float anispeed = 0;
+	float anilength = 0;
+	float aninumber = 0;
+	float aniframe = 0;
+
+	//Scaling
+
+	Vector3 scale;
+
+	//action
+
+	bool attack = false;
+
+
+
+	//Time variables
+	float time = 0;
+
+	float t1 = 0;
+	float t2 = 0;
+
+	float timelimit = 0;
+
+	//Random Movement Varaibles
+	bool move = false;
+	bool clockwise = false;
+
+	float rt = 0;
+	float rp = 0;
+
+	//Random Coordinates
+	float rx = 0;
+	float rz = 0;
+
+
+	// Use this for initialization
+	void Start () 
+	{
+		anim = GetComponent<Animator> ();
+		anim2 = GetComponent<Animation> ();
+
+		// set enemy health
+		anim.SetFloat("Health",100);
+
+		//movement, orientation and direction
+		player = GameObject.FindWithTag ("Player");
+		startp = player.transform.position;
+		lookAtPosition = player.transform.position;
+
+		time = Time.time;
+		rt = Time.time + Random.Range (3f, 10f); 
+
+		rp = Random.Range (0f, 1f);
+
+		scale.x = transform.localScale.x;
+		scale.y = transform.localScale.y;
+		scale.z = transform.localScale.z;
+
+
+	}
+	
+	// Update is called once per frame
+	void Update () 
+	{
+
+		bool xaxis = player.GetComponent<AccelometerBehaviourScript>().xaxis;
+		bool yaxis = player.GetComponent<AccelometerBehaviourScript>().yaxis;
+		bool zaxis = player.GetComponent<AccelometerBehaviourScript>().zaxis;
+
+		float xdif = player.GetComponent<AccelometerBehaviourScript> ().xdif;
+		float ydif = player.GetComponent<AccelometerBehaviourScript> ().ydif;
+		float zdif = player.GetComponent<AccelometerBehaviourScript> ().zdif;
+
+		bool left = player.GetComponent<AccelometerBehaviourScript> ().left;
+		bool right = player.GetComponent<AccelometerBehaviourScript> ().right;
+
+		bool up = player.GetComponent<AccelometerBehaviourScript> ().up;
+		bool down = player.GetComponent<AccelometerBehaviourScript> ().down;
+
+		bool forward = player.GetComponent<AccelometerBehaviourScript> ().forward;
+		bool back = player.GetComponent<AccelometerBehaviourScript> ().back;
+
+
+
+
+		// player position variables
+		float x = startp.x;
+		float y = startp.y;
+		float z = startp.z;
+
+
+		// Accelometer movement relatives (for circle movement of accelometer)
+		//(may need to increase movement with accelometer difference(speed))
+		//(may screw up due to time difference from start and movement, if (time.time ++) {float t ++;})
+
+		//time movements
+		// in relation to accelometer speed = won't work
+		if (xaxis == true){
+			if(Time.time >= time + 1f){
+				t1 ++;
+				time = Time.time;
+			}
+		}
+	
+
+		if (xaxis == false) {
+			t1 = 0;
+		}
+
+
+		//circle movement (may screw up due to time difference from start and movement, if (time.time ++) {float t ++;})
+		//positive
+		float px = x+10 * Mathf.Sin(t1 + xdif);
+		float pz = z+10 * Mathf.Cos(t1 + xdif);
+	    //negative
+		float nx = x+10 * Mathf.Sin(-(t1 + xdif));
+		float nz = z+10 * Mathf.Cos(-(t1 + xdif));
+
+	    // 'X' positioning, move enemy around left or right (x+z axis) circle movement
+		//positive
+
+		if (left == true) {
+			transform.position = new Vector3 (px, 0, pz);
+			anim.SetBool ("Side", true);
+		}
+
+		if (left == false){
+			anim.SetBool ("Side", false);
+		}
+		//negative
+		if (right == true)
+			transform.position = new Vector3 (nx, 0, nz);
+		anim.SetBool ("Side", true);
+
+		if (right == false){
+			anim.SetBool ("Side", false);
+		}
+
+		// 'Y' + positioning, move enemy up or down on Y axis (if player is looking at floor or ceiling)
+		// needs relation to y accelometer axis (time it's active in direction)
+		if (up == true || down == true) {
+			transform.position = new Vector3 (0, ydif, 0);
+		}
+		// 'Z'Axis + Scaling (distance) needs relation to z accelometer axis (time it's active in direction)
+		if (forward == true || back == true) {
+			transform.localScale += new Vector3 (zdif, zdif, 0);
+
+			scale.x = transform.localScale.x;
+			scale.y = transform.localScale.y;
+		}
+	
+
+
+		//Random movement
+
+		if (rp == 1) {
+			clockwise = true;
+		}
+
+		if (rp == 0) {
+			clockwise = false;
+		}
+
+		if (clockwise == true) {
+			rx = x + 10 * Mathf.Sin (time);
+			rz = z + 10 * Mathf.Cos (time);
+		}
+
+		if (clockwise == false) {
+			rx = x + 10 * Mathf.Sin (-time);
+			rz = z + 10 * Mathf.Cos (-time);
+		}
+
+
+		if (time == rt) {
+			move = true;
+			rt = Time.time + Random.Range (3f, 10f);
+		}
+
+		if (move == true) {
+
+
+		if(Time.time >= time + 1f){
+			t2 ++;
+			time = Time.time;
+		}
+				transform.position = new Vector3 (rx, 0, rz);
+			anim.SetBool ("Side", true);
+			if (t2 == timelimit){
+				move = false;}
+		}
+
+		if (move == false) {
+			anim.SetBool ("Side", false);
+		}
+			
+		//attacking 
+
+		if (scale.x == 5 && scale.y == 5){
+			attack = true;
+		}
+
+		if (attack == true) {
+			
+			anim.SetBool ("Attack", true);
+
+
+
+			anispeed = anim2["Attack"].speed;
+			anilength = anim2["Attack"].length;
+			aninumber = 12;
+
+			ratio = anispeed / anilength;
+
+			aniframe = ratio * aninumber;
+
+			if (aniframe == aninumber) {
+				attack = false;
+				anim.SetBool ("Attack", false);
+			}
+
+		}
+
+
+
+	
+		}
+
+}
